@@ -1,0 +1,1 @@
+This is a monorepo housing the superhuman++ app.
