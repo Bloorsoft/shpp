@@ -116,4 +116,59 @@ export const gmailRouter = createTRPCRouter({
       });
     }
   }),
+  sendEmail: protectedProcedure
+    .input(
+      z.object({
+        to: z.string(),
+        subject: z.string(),
+        content: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { session } = ctx;
+      const { to, subject, content } = input;
+
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing authentication tokens",
+        });
+      }
+
+      try {
+        const gmail = createAuthenticatedGmail(
+          session.accessToken,
+          session.refreshToken,
+        );
+
+        const message = [
+          `To: ${to}`,
+          `Subject: ${subject}`,
+          "Content-Type: text/html; charset=utf-8",
+          "MIME-Version: 1.0",
+          "",
+          content,
+        ].join("\r\n");
+
+        const encodedMessage = Buffer.from(message)
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+
+        await gmail.users.messages.send({
+          userId: "me",
+          requestBody: {
+            raw: encodedMessage,
+          },
+        });
+
+        return { success: true };
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }),
 });

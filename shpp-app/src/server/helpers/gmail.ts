@@ -1,6 +1,9 @@
 import { google, type gmail_v1 } from "googleapis";
 
-export const createAuthenticatedGmail = (accessToken: string, refreshToken: string) => {
+export const createAuthenticatedGmail = (
+  accessToken: string,
+  refreshToken: string,
+) => {
   const auth = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,

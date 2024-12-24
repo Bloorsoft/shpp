@@ -27,3 +27,28 @@ You can check out the [create-t3-app GitHub repository](https://github.com/t3-os
 ## How do I deploy this?
 
 Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+
+
+## How to add custom shortcuts to components?
+
+```
+const MyComponent = () => {
+  const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
+
+  useEffect(() => {
+    registerShortcut("j", () => {
+      // Navigate to next email
+    });
+    registerShortcut("k", () => {
+      // Navigate to previous email
+    });
+
+    return () => {
+      unregisterShortcut("j");
+      unregisterShortcut("k");
+    };
+  }, [registerShortcut, unregisterShortcut]);
+
+  return <div>...</div>;
+};
+```

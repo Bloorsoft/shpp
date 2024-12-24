@@ -5,7 +5,7 @@ import { type Metadata } from "next";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { SessionProvider } from "next-auth/react";
-
+import { KeyboardShortcutsProvider } from "@/contexts/keyboard-shortcuts";
 export const metadata: Metadata = {
   title: "Superhuman++",
   description: "Superhuman++",
@@ -19,7 +19,9 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable}`}>
       <body>
         <SessionProvider>
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <KeyboardShortcutsProvider>{children}</KeyboardShortcutsProvider>
+          </TRPCReactProvider>
         </SessionProvider>
       </body>
     </html>
