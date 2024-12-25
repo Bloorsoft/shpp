@@ -6,15 +6,16 @@ import { ThreadView } from "@/app/_components/thread-view";
 export default async function ThreadPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const session = await auth();
+  const threadParams = await params;
 
   if (!session?.user) {
     return notFound();
   }
 
-  const thread = await api.gmail.getThread({ threadId: params.id });
+  const thread = await api.gmail.getThread({ threadId: threadParams.id });
 
   return (
     <main className="container mx-auto p-4">

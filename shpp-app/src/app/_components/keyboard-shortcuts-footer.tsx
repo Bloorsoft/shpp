@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 
 const shortcuts = [
-  { key: "Hit E", description: "to Mark Done" },
+  { key: "E", description: "to Mark Done" },
   { key: "H", description: "to set a reminder" },
   { key: "C", description: "to compose" },
   { key: "/", description: "to search" },
