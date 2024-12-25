@@ -44,6 +44,7 @@ export const authConfig = {
             "https://www.googleapis.com/auth/gmail.readonly",
             "https://www.googleapis.com/auth/gmail.send",
             "https://www.googleapis.com/auth/gmail.compose",
+            "https://www.googleapis.com/auth/gmail.modify",
           ].join(" "),
           access_type: "offline",
           prompt: "consent",

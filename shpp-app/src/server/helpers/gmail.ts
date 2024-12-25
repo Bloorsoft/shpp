@@ -1,21 +1,55 @@
 import { google, type gmail_v1 } from "googleapis";
 
-export const createAuthenticatedGmail = (
-  accessToken: string,
-  refreshToken: string,
-) => {
-  const auth = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-  );
+export class GmailClient {
+  private static instances = new Map<string, GmailClient>();
+  private gmail: gmail_v1.Gmail;
+  private lastUsed: number;
+  private static readonly TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
-  auth.setCredentials({
-    access_token: accessToken,
-    refresh_token: refreshToken,
-  });
+  private constructor(accessToken: string, refreshToken: string) {
+    const auth = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+    );
 
-  return google.gmail({ version: "v1", auth });
-};
+    auth.setCredentials({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+    this.gmail = google.gmail({ version: "v1", auth });
+    this.lastUsed = Date.now();
+  }
+
+  public static getInstance(accessToken: string, refreshToken: string): GmailClient {
+    const key = `${accessToken}:${refreshToken}`;
+    let instance = this.instances.get(key);
+
+    if (!instance) {
+      instance = new GmailClient(accessToken, refreshToken);
+      this.instances.set(key, instance);
+    }
+
+    instance.lastUsed = Date.now();
+    return instance;
+  }
+
+  public static cleanup() {
+    const now = Date.now();
+    for (const [key, instance] of this.instances) {
+      if (now - instance.lastUsed > this.TIMEOUT) {
+        this.instances.delete(key);
+      }
+    }
+  }
+
+  public get client() {
+    return this.gmail;
+  }
+}
+
+// Run cleanup every 5 minutes
+setInterval(() => GmailClient.cleanup(), 5 * 60 * 1000);
 
 export const parseMessageHeaders = (
   headers: gmail_v1.Schema$MessagePartHeader[] = [],

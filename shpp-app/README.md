@@ -52,3 +52,40 @@ const MyComponent = () => {
   return <div>...</div>;
 };
 ```
+
+
+## rate limiting with upstash
+
+```
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+
+// Create a new ratelimiter that allows 10 requests per 10 seconds
+const ratelimit = new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(10, "10s"),
+});
+
+export const aiRouter = createTRPCRouter({
+  analyzeEmailImportance: protectedProcedure
+    .input(
+      z.object({
+        subject: z.string(),
+        from: z.string(),
+        snippet: z.string(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      // Rate limit by user
+      const { success } = await ratelimit.limit(
+        ctx.session?.user?.id ?? "anonymous"
+      );
+      
+      if (!success) {
+        throw new Error("Too many requests. Please try again later.");
+      }
+
+      return await analyzeEmailImportance(input);
+    }),
+});
+```

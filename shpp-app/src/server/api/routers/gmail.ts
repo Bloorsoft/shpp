@@ -2,9 +2,9 @@ import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
-  createAuthenticatedGmail,
   formatMessage,
   getMessageContent,
+  GmailClient,
 } from "@/server/helpers/gmail";
 
 export const gmailRouter = createTRPCRouter({
@@ -22,10 +22,10 @@ export const gmailRouter = createTRPCRouter({
       }
 
       try {
-        const gmail = createAuthenticatedGmail(
+        const gmail = GmailClient.getInstance(
           session.accessToken,
           session.refreshToken,
-        );
+        ).client;
 
         const res = await gmail.users.messages.list({
           userId: "me",
@@ -74,10 +74,10 @@ export const gmailRouter = createTRPCRouter({
       }
 
       try {
-        const gmail = createAuthenticatedGmail(
+        const gmail = GmailClient.getInstance(
           session.accessToken,
           session.refreshToken,
-        );
+        ).client;
 
         const thread = await gmail.users.threads.get({
           userId: "me",
@@ -103,10 +103,10 @@ export const gmailRouter = createTRPCRouter({
     }
 
     try {
-      const gmail = createAuthenticatedGmail(
+      const gmail = GmailClient.getInstance(
         session.accessToken,
         session.refreshToken,
-      );
+      ).client;
       const res = await gmail.users.labels.list({ userId: "me" });
       return res.data.labels ?? [];
     } catch (err) {
@@ -136,10 +136,10 @@ export const gmailRouter = createTRPCRouter({
       }
 
       try {
-        const gmail = createAuthenticatedGmail(
+        const gmail = GmailClient.getInstance(
           session.accessToken,
           session.refreshToken,
-        );
+        ).client;
 
         const message = [
           `To: ${to}`,
@@ -161,6 +161,38 @@ export const gmailRouter = createTRPCRouter({
           requestBody: {
             raw: encodedMessage,
           },
+        });
+
+        return { success: true };
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }),
+  deleteMessage: protectedProcedure
+    .input(z.object({ messageId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { session } = ctx;
+      const { messageId } = input;
+
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing authentication tokens",
+        });
+      }
+
+      try {
+        const gmail = GmailClient.getInstance(
+          session.accessToken,
+          session.refreshToken,
+        ).client;
+
+        await gmail.users.messages.trash({
+          userId: "me",
+          id: messageId,
         });
 
         return { success: true };
