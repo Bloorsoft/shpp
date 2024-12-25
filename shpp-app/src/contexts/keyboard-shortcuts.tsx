@@ -4,7 +4,10 @@ import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 type ShortcutHandler = (e: KeyboardEvent) => void;
-type ShortcutOptions = { ignoreInputs?: boolean };
+type ShortcutOptions = {
+  ignoreInputs?: boolean;
+  requireModifier?: boolean;
+};
 
 interface ShortcutsContextType {
   registerShortcut: (
@@ -39,6 +42,19 @@ export function KeyboardShortcutsProvider({
           document.activeElement?.tagName === "TEXTAREA")
       ) {
         return;
+      }
+
+      if (shortcut.options?.requireModifier && !(e.metaKey || e.ctrlKey)) {
+        return;
+      }
+
+      if (
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA"
+      ) {
+        if (!(e.metaKey || e.ctrlKey)) {
+          return;
+        }
       }
 
       e.preventDefault();

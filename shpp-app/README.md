@@ -89,3 +89,9 @@ export const aiRouter = createTRPCRouter({
     }),
 });
 ```
+
+## How to optimize the prompt for email generation?
+
+- use structured outputs to create subject separately
+- have context on who the main user of the application is
+-- maybe ask them to give their personal website, linkedin, or any other relevant info that they have when they are initially setting up their account -> store this content in a vector db
