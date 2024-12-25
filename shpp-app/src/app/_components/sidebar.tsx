@@ -12,6 +12,12 @@ import { Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LoginButton } from "@/app/_components/login-button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function Sidebar({
   currentLabel,
@@ -57,13 +63,11 @@ export function Sidebar({
   return (
     <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen} direction="left">
       <DrawerTrigger asChild>
-        <button className="absolute left-4 top-4 rounded-lg p-2 hover:bg-gray-100">
-          <Menu className="h-6 w-6" />
-        </button>
+        <SidebarButton setIsDrawerOpen={setIsDrawerOpen} />
       </DrawerTrigger>
       <DrawerContent className="h-full max-w-sm rounded-none">
         <DrawerHeader>
-          <DrawerTitle className="flex justify-between items-center">
+          <DrawerTitle className="flex items-center justify-between">
             <p>{currEmail}</p>
             <LoginButton />
           </DrawerTitle>
@@ -95,5 +99,29 @@ export function Sidebar({
         </div>
       </DrawerContent>
     </Drawer>
+  );
+}
+
+function SidebarButton({
+  setIsDrawerOpen,
+}: {
+  setIsDrawerOpen: (open: boolean) => void;
+}) {
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className="absolute left-4 top-4 rounded-lg p-2 hover:bg-gray-100 cursor-pointer"
+            onClick={() => setIsDrawerOpen(true)}
+          >
+            <Menu className="h-6 w-6" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Folders</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

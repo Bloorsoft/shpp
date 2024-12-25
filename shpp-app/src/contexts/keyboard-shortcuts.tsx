@@ -4,9 +4,14 @@ import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 type ShortcutHandler = (e: KeyboardEvent) => void;
+type ShortcutOptions = { ignoreInputs?: boolean };
 
 interface ShortcutsContextType {
-  registerShortcut: (key: string, handler: ShortcutHandler) => void;
+  registerShortcut: (
+    key: string,
+    handler: ShortcutHandler,
+    options?: ShortcutOptions,
+  ) => void;
   unregisterShortcut: (key: string) => void;
 }
 
@@ -18,25 +23,30 @@ export function KeyboardShortcutsProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const shortcuts = new Map<string, ShortcutHandler>();
+  const shortcuts = new Map<
+    string,
+    { handler: ShortcutHandler; options?: ShortcutOptions }
+  >();
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
+      const shortcut = shortcuts.get(e.key.toLowerCase());
+      if (!shortcut) return;
+
       if (
-        document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA"
+        !shortcut.options?.ignoreInputs &&
+        (document.activeElement?.tagName === "INPUT" ||
+          document.activeElement?.tagName === "TEXTAREA")
       ) {
         return;
       }
 
-      const handler = shortcuts.get(e.key.toLowerCase());
-      if (handler) {
-        e.preventDefault();
-        handler(e);
-      }
+      e.preventDefault();
+      shortcut.handler(e);
     };
 
-    shortcuts.set("c", () => router.push("/compose"));
+    shortcuts.set("c", { handler: () => router.push("/compose") });
+    shortcuts.set("escape", { handler: () => router.push("/") });
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
@@ -45,8 +55,8 @@ export function KeyboardShortcutsProvider({
   return (
     <ShortcutsContext.Provider
       value={{
-        registerShortcut: (key, handler) =>
-          shortcuts.set(key.toLowerCase(), handler),
+        registerShortcut: (key, handler, options) =>
+          shortcuts.set(key.toLowerCase(), { handler, options }),
         unregisterShortcut: (key) => shortcuts.delete(key.toLowerCase()),
       }}
     >
