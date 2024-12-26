@@ -10,8 +10,12 @@ import type { EmailImportance } from "@/lib/ai/schemas";
 
 export function EmailList({
   initialMessages,
+  currentMessages,
+  hideLabel = false,
 }: {
   initialMessages: GmailMessage[];
+  currentMessages?: GmailMessage[];
+  hideLabel?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -20,13 +24,16 @@ export function EmailList({
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const utils = api.useUtils();
 
-  const { data: messages = initialMessages } = api.gmail.listMessages.useQuery(
+  const { data: fetchedMessages } = api.gmail.listMessages.useQuery(
     { labelId: currentLabel },
     {
       initialData: initialMessages,
       refetchInterval: 30000,
+      enabled: !currentMessages,
     },
   );
+
+  const messages = currentMessages ?? fetchedMessages ?? initialMessages;
 
   const { data: importance } = api.ai.analyzeEmailImportance.useQuery(
     selectedIndex >= 0
@@ -100,9 +107,11 @@ export function EmailList({
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <h2 className="mb-4 text-2xl capitalize">
-        {currentLabel.toLowerCase().replace("_", " ")}
-      </h2>
+      {!hideLabel && (
+        <h2 className="mb-4 text-2xl capitalize">
+          {currentLabel.toLowerCase().replace("_", " ")}
+        </h2>
+      )}
       {messages.length === 0 ? (
         <p>No messages found.</p>
       ) : (

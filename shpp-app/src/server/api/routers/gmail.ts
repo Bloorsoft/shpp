@@ -203,4 +203,61 @@ export const gmailRouter = createTRPCRouter({
         });
       }
     }),
+  searchMessages: protectedProcedure
+    .input(
+      z.object({
+        query: z.string(),
+        maxResults: z.number().default(20),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { session } = ctx;
+      const { query, maxResults } = input;
+
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing authentication tokens",
+        });
+      }
+
+      try {
+        const gmail = GmailClient.getInstance(
+          session.accessToken,
+          session.refreshToken,
+        ).client;
+
+        const res = await gmail.users.messages.list({
+          userId: "me",
+          maxResults,
+          q: query,
+        });
+
+        const messages = res.data.messages ?? [];
+
+        const messagesWithDetails = await Promise.all(
+          messages.map(async (message) => {
+            if (!message.id) return null;
+
+            const details = await gmail.users.messages.get({
+              userId: "me",
+              id: message.id,
+              format: "metadata",
+              metadataHeaders: ["Subject", "From", "Date"],
+            });
+
+            return formatMessage(details.data);
+          }),
+        );
+
+        return messagesWithDetails.filter(
+          (msg): msg is NonNullable<typeof msg> => msg !== null,
+        );
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }),
 });

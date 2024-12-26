@@ -3,16 +3,29 @@
 import { api } from "@/trpc/react";
 import { formatEmailDate } from "@/lib/utils";
 import type { GmailMessage } from "@/trpc/shared/gmail";
+import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 interface ThreadViewProps {
   initialThread: GmailMessage[];
 }
 
 export function ThreadView({ initialThread }: ThreadViewProps) {
+  const router = useRouter();
+  const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const { data: thread = initialThread } = api.gmail.getThread.useQuery(
     { threadId: initialThread[0]?.threadId ?? "" },
     { refetchInterval: 30000 },
   );
+
+  useEffect(() => {
+    registerShortcut("escape", () => router.push("/"));
+
+    return () => {
+      unregisterShortcut("escape");
+    };
+  }, [registerShortcut, unregisterShortcut, router]);
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -31,12 +44,12 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
             </div>
             <div className="mt-4">
               {message.htmlContent ? (
-                <div 
+                <div
                   dangerouslySetInnerHTML={{ __html: message.htmlContent }}
-                  className="prose max-w-none overflow-x-auto [&_pre]:overflow-x-auto [&_pre]:p-4 [&_code]:whitespace-pre-wrap"
+                  className="prose max-w-none overflow-x-auto [&_code]:whitespace-pre-wrap [&_pre]:overflow-x-auto [&_pre]:p-4"
                 />
               ) : (
-                <div className="whitespace-pre-wrap overflow-x-auto">
+                <div className="overflow-x-auto whitespace-pre-wrap">
                   {message.plainContent || message.snippet}
                 </div>
               )}

@@ -90,10 +90,13 @@ export default function ComposePage() {
       { ignoreInputs: true, requireModifier: true },
     );
 
+    registerShortcut("escape", () => router.push("/"));
+
     return () => {
       unregisterShortcut("Enter");
       unregisterShortcut(",");
       unregisterShortcut("j");
+      unregisterShortcut("escape");
     };
   }, [
     registerShortcut,
@@ -101,6 +104,7 @@ export default function ComposePage() {
     handleSubmit,
     handleDiscard,
     handleAiDialogOpen,
+    router,
   ]);
 
   return (

@@ -9,9 +9,10 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Menu } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { LoginButton } from "@/app/_components/login-button";
+import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import {
   Tooltip,
   TooltipContent,
@@ -27,25 +28,31 @@ export function Sidebar({
   currEmail: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
 
   useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "o") {
-        event.preventDefault();
+    registerShortcut(
+      "o",
+      (e) => {
+        e.preventDefault();
         setIsDrawerOpen((prev) => !prev);
-      }
-    };
+      },
+      { requireModifier: true },
+    );
 
-    if (window && typeof window !== "undefined") {
-      window.addEventListener("keydown", handleKeyPress);
-    }
+    registerShortcut("escape", () => setIsDrawerOpen(false));
+
     return () => {
-      if (window && typeof window !== "undefined") {
-        window.removeEventListener("keydown", handleKeyPress);
-      }
+      unregisterShortcut("o");
+      unregisterShortcut("escape");
     };
-  }, []);
+  }, [registerShortcut, unregisterShortcut]);
+
+  useEffect(() => {
+    setIsDrawerOpen(false);
+  }, [pathname]);
 
   const { data: labels } = api.gmail.listLabels.useQuery();
 
@@ -112,7 +119,7 @@ function SidebarButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="absolute left-4 top-4 rounded-lg p-2 hover:bg-gray-100 cursor-pointer"
+            className="absolute left-4 top-4 cursor-pointer rounded-lg p-2 hover:bg-gray-100"
             onClick={() => setIsDrawerOpen(true)}
           >
             <Menu className="h-6 w-6" />

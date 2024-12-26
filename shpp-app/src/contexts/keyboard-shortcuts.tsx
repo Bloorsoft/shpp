@@ -62,7 +62,7 @@ export function KeyboardShortcutsProvider({
     };
 
     shortcuts.set("c", { handler: () => router.push("/compose") });
-    shortcuts.set("escape", { handler: () => router.push("/") });
+    shortcuts.set("/", { handler: () => router.push("/search") });
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
