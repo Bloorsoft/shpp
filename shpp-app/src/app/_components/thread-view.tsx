@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { api } from "@/trpc/react";
 import { formatEmailDate } from "@/lib/utils";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { EmailComposer } from "@/app/_components/email-composer";
 
 interface ThreadViewProps {
   initialThread: GmailMessage[];
@@ -13,19 +15,42 @@ interface ThreadViewProps {
 
 export function ThreadView({ initialThread }: ThreadViewProps) {
   const router = useRouter();
+  const [showReply, setShowReply] = useState(false);
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const { data: thread = initialThread } = api.gmail.getThread.useQuery(
     { threadId: initialThread[0]?.threadId ?? "" },
     { refetchInterval: 30000 },
   );
 
+  const { mutate: sendReply, isPending } = api.gmail.sendReply.useMutation({
+    onSuccess: () => {
+      setShowReply(false);
+    },
+  });
+
   useEffect(() => {
-    registerShortcut("escape", () => router.back());
+    registerShortcut("Enter", (e) => {
+      if (!showReply) {
+        e.preventDefault();
+        setShowReply(true);
+      }
+    });
+
+    registerShortcut("escape", () => {
+      if (showReply) {
+        setShowReply(false);
+      } else {
+        router.back();
+      }
+    });
 
     return () => {
+      unregisterShortcut("Enter");
       unregisterShortcut("escape");
     };
-  }, [registerShortcut, unregisterShortcut, router]);
+  }, [registerShortcut, unregisterShortcut, router, showReply]);
+
+  const lastMessage = thread[thread.length - 1];
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
@@ -57,6 +82,23 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
           </div>
         ))}
       </div>
+
+      {showReply && (
+        <EmailComposer
+          to={lastMessage?.from}
+          subject={`Re: ${thread[0]?.subject}`}
+          onSubmit={({ content }) => {
+            sendReply({
+              threadId: thread[0]?.threadId ?? "",
+              content,
+              to: lastMessage?.from ?? "",
+            });
+          }}
+          onDiscard={() => setShowReply(false)}
+          isPending={isPending}
+          isReply
+        />
+      )}
     </div>
   );
 }

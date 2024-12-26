@@ -27,26 +27,32 @@ export const gmailRouter = createTRPCRouter({
           session.refreshToken,
         ).client;
 
-        const res = await gmail.users.messages.list({
+        const res = await gmail.users.threads.list({
           userId: "me",
           maxResults: 20,
           labelIds: [labelId],
         });
 
-        const messages = res.data.messages ?? [];
+        const threads = res.data.threads ?? [];
 
         const messagesWithDetails = await Promise.all(
-          messages.map(async (message) => {
-            if (!message.id) return null;
+          threads.map(async (thread) => {
+            if (!thread.id) return null;
 
-            const details = await gmail.users.messages.get({
+            const threadDetails = await gmail.users.threads.get({
               userId: "me",
-              id: message.id,
+              id: thread.id,
               format: "metadata",
               metadataHeaders: ["Subject", "From", "Date"],
             });
 
-            return formatMessage(details.data);
+            const latestMessage = threadDetails.data.messages?.[0];
+            if (!latestMessage) return null;
+
+            return formatMessage({
+              ...latestMessage,
+              threadId: thread.id,
+            });
           }),
         );
 
@@ -253,6 +259,72 @@ export const gmailRouter = createTRPCRouter({
         return messagesWithDetails.filter(
           (msg): msg is NonNullable<typeof msg> => msg !== null,
         );
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }),
+  sendReply: protectedProcedure
+    .input(
+      z.object({
+        threadId: z.string(),
+        content: z.string(),
+        to: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { session } = ctx;
+      const { threadId, content, to } = input;
+
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing authentication tokens",
+        });
+      }
+
+      try {
+        const gmail = GmailClient.getInstance(
+          session.accessToken,
+          session.refreshToken,
+        ).client;
+
+        const thread = await gmail.users.threads.get({
+          userId: "me",
+          id: threadId,
+        });
+
+        const lastMessage =
+          thread.data.messages?.[thread.data.messages.length - 1];
+        if (!lastMessage) throw new Error("No messages in thread");
+
+        const message = [
+          `To: ${to}`,
+          `In-Reply-To: ${lastMessage.id}`,
+          `References: ${lastMessage.threadId}`,
+          "Content-Type: text/html; charset=utf-8",
+          "MIME-Version: 1.0",
+          "",
+          content,
+        ].join("\r\n");
+
+        const encodedMessage = Buffer.from(message)
+          .toString("base64")
+          .replace(/\+/g, "-")
+          .replace(/\//g, "_")
+          .replace(/=+$/, "");
+
+        await gmail.users.messages.send({
+          userId: "me",
+          requestBody: {
+            raw: encodedMessage,
+            threadId,
+          },
+        });
+
+        return { success: true };
       } catch (err) {
         throw new TRPCError({
           code: "BAD_REQUEST",

@@ -36,25 +36,16 @@ export function KeyboardShortcutsProvider({
       const shortcut = shortcuts.get(e.key.toLowerCase());
       if (!shortcut) return;
 
-      if (
-        !shortcut.options?.ignoreInputs &&
-        (document.activeElement?.tagName === "INPUT" ||
-          document.activeElement?.tagName === "TEXTAREA")
-      ) {
+      const isInInput =
+        document.activeElement?.tagName === "INPUT" ||
+        document.activeElement?.tagName === "TEXTAREA";
+
+      if (!shortcut.options?.ignoreInputs && isInInput) {
         return;
       }
 
       if (shortcut.options?.requireModifier && !(e.metaKey || e.ctrlKey)) {
         return;
-      }
-
-      if (
-        document.activeElement?.tagName === "INPUT" ||
-        document.activeElement?.tagName === "TEXTAREA"
-      ) {
-        if (!(e.metaKey || e.ctrlKey)) {
-          return;
-        }
       }
 
       e.preventDefault();
