@@ -20,7 +20,7 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
   );
 
   useEffect(() => {
-    registerShortcut("escape", () => router.push("/"));
+    registerShortcut("escape", () => router.back());
 
     return () => {
       unregisterShortcut("escape");
