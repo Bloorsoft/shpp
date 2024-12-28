@@ -5,6 +5,8 @@ import { api } from "@/trpc/react";
 import { EmailComposer } from "@/app/_components/email-composer";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { useEffect } from "react";
+import type { EmailDraft } from "@/lib/ai/schemas";
+import { formatDraft } from "@/lib/utils";
 
 export default function ComposePage() {
   const router = useRouter();
@@ -21,7 +23,11 @@ export default function ComposePage() {
   return (
     <EmailComposer
       onSubmit={({ to, subject, content }) =>
-        sendEmail({ to, subject, content })
+        sendEmail({
+          to,
+          subject,
+          content: formatDraft(content as EmailDraft),
+        })
       }
       onDiscard={() => router.push("/")}
       isPending={isPending}

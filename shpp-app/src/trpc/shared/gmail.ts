@@ -1,11 +1,6 @@
-import type { RouterOutputs, RouterInputs } from "../react";
+import type { RouterInputs } from "../react";
 
-export type GmailMessage = RouterOutputs["gmail"]["listMessages"][number];
-export type GmailMessageList = RouterOutputs["gmail"]["listMessages"];
-
-export type GmailListMessagesInput = RouterInputs["gmail"]["listMessages"];
-
-export interface GmailMessageDetails {
+export interface GmailMessage {
   id: string;
   threadId: string;
   subject: string;
@@ -15,3 +10,7 @@ export interface GmailMessageDetails {
   htmlContent?: string;
   plainContent?: string;
 }
+
+export type GmailMessageList = GmailMessage[];
+
+export type GmailListMessagesInput = RouterInputs["gmail"]["listMessages"];

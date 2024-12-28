@@ -97,6 +97,7 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
           onDiscard={() => setShowReply(false)}
           isPending={isPending}
           isReply
+          threadMessages={thread}
         />
       )}
     </div>

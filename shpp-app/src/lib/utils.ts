@@ -1,29 +1,41 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import type { EmailDraft } from "@/lib/ai/schemas";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 export function formatEmailDate(dateStr: string) {
-  const messageDate = new Date(dateStr.replace(/\./g, ''));
+  const messageDate = new Date(dateStr.replace(/\./g, ""));
   if (isNaN(messageDate.getTime())) return "Invalid date";
-  
+
   const now = new Date();
   const isToday = messageDate.toDateString() === now.toDateString();
   const isCurrentYear = messageDate.getFullYear() === now.getFullYear();
-  
+
   if (isToday) {
-    return messageDate.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
-      minute: '2-digit',
-      hour12: true 
+    return messageDate.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   }
-  
-  return messageDate.toLocaleDateString('en-US', { 
-    month: 'short', 
-    day: '2-digit',
-    ...(isCurrentYear ? {} : { year: 'numeric' })
+
+  return messageDate.toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    ...(isCurrentYear ? {} : { year: "numeric" }),
   });
+}
+
+export function formatDraft(draft: EmailDraft) {
+  return [
+    draft.greeting,
+    "",
+    draft.body,
+    "",
+    draft.closing,
+    draft.signature ? `\n${draft.signature}` : "",
+  ].join("\n");
 }

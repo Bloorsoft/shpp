@@ -28,7 +28,7 @@ export function EmailList({
     { labelId: currentLabel },
     {
       initialData: initialMessages,
-      refetchInterval: 30000,
+    //   refetchInterval: 30000,
       enabled: !currentMessages,
     },
   );

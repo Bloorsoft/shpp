@@ -1,6 +1,12 @@
-import { generateObject, generateText } from "ai";
-import { type EmailImportance, EmailImportanceSchema } from "./schemas";
+import { generateObject } from "ai";
+import {
+  type EmailDraft,
+  type EmailImportance,
+  EmailImportanceSchema,
+  EmailDraftSchema,
+} from "./schemas";
 import { openai } from "@ai-sdk/openai";
+import type { GmailMessage } from "@/trpc/shared/gmail";
 
 const cache = new Map<string, EmailImportance>();
 
@@ -8,7 +14,7 @@ export async function analyzeEmailImportance(email: {
   subject: string;
   from: string;
   snippet: string;
-}) {
+}): Promise<EmailImportance> {
   const cacheKey = `${email.subject}-${email.from}-${email.snippet}`;
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey)!;
@@ -41,8 +47,11 @@ export async function generateEmailDraft(input: {
   tone?: "professional" | "casual" | "friendly";
   modifications?: string;
   previousDraft?: string;
-}) {
-  const model = openai("gpt-4o");
+  threadMessages?: GmailMessage[];
+}): Promise<EmailDraft> {
+  const model = openai("gpt-4o", {
+    structuredOutputs: true,
+  });
 
   let prompt = "";
   if (input.modifications && input.previousDraft) {
@@ -58,19 +67,24 @@ ${input.modifications}`;
       input.tone ? ` in a ${input.tone} tone` : ""
     }${input.subject ? ` about: ${input.subject}` : ""}.${
       input.outline ? `\n\nIncorporate these points:\n${input.outline}` : ""
+    }${
+      input.threadMessages
+        ? `\n\nThis is a reply to the following thread:\n${input.threadMessages
+            .map(
+              (msg) =>
+                `From: ${msg.from}\nContent: ${msg.plainContent ?? msg.snippet}\n`,
+            )
+            .join("\n")}`
+        : ""
     }`;
   }
 
-  const { text } = await generateText({
+  const { object } = await generateObject({
     model,
-    system: `You are an expert email writer who helps users draft effective emails.
-Your emails should be:
-- Clear and concise
-- Well-structured
-- Professional yet approachable
-- Free of fluff and unnecessary words`,
+    schema: EmailDraftSchema,
     prompt,
+    schemaDescription: "Email draft with structured components",
   });
 
-  return text;
+  return object;
 }

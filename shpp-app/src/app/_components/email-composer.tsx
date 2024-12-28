@@ -14,15 +14,23 @@ import {
 import { Trash2 } from "lucide-react";
 import { AIDraftDialog } from "@/app/_components/ai-draft-dialog";
 import { cn } from "@/lib/utils";
+import type { GmailMessage } from "@/trpc/shared/gmail";
+import { type EmailDraft } from "@/lib/ai/schemas";
+import { formatDraft } from "@/lib/utils";
 
 interface EmailComposerProps {
   to?: string;
   subject?: string;
   initialContent?: string;
-  onSubmit: (data: { to: string; subject: string; content: string }) => void;
+  onSubmit: (data: {
+    to: string;
+    subject: string;
+    content: EmailDraft | string;
+  }) => void;
   onDiscard: () => void;
   isPending?: boolean;
   isReply?: boolean;
+  threadMessages?: GmailMessage[];
 }
 
 export function EmailComposer({
@@ -33,6 +41,7 @@ export function EmailComposer({
   onDiscard,
   isPending = false,
   isReply = false,
+  threadMessages,
 }: EmailComposerProps) {
   const [toValue, setToValue] = useState(to);
   const [subjectValue, setSubjectValue] = useState(subject);
@@ -113,7 +122,7 @@ export function EmailComposer({
     >
       <div
         className={cn(
-          isReply && "w-full rounded-lg p-8 border",
+          isReply && "w-full rounded-lg border p-8",
           "mx-auto w-full max-w-3xl",
         )}
       >
@@ -236,8 +245,10 @@ export function EmailComposer({
         open={aiDialogOpen}
         onOpenChange={setAiDialogOpen}
         subject={subjectValue}
-        onAccept={(content) => {
-          setContent(content);
+        threadMessages={threadMessages}
+        onAccept={(draft: EmailDraft) => {
+          setContent(formatDraft(draft));
+          setSubjectValue(draft.subject);
           setAiDialogOpen(false);
         }}
       />

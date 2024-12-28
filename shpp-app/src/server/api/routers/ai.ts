@@ -1,6 +1,8 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
 import { z } from "zod";
 import { analyzeEmailImportance, generateEmailDraft } from "@/lib/ai/service";
+import type { GmailMessage } from "@/trpc/shared/gmail";
+import { EmailDraftSchema } from "@/lib/ai/schemas";
 
 export const aiRouter = createTRPCRouter({
   analyzeEmailImportance: protectedProcedure
@@ -23,8 +25,10 @@ export const aiRouter = createTRPCRouter({
         tone: z.enum(["professional", "casual", "friendly"]).optional(),
         modifications: z.string().optional(),
         previousDraft: z.string().optional(),
+        threadMessages: z.array(z.custom<GmailMessage>()).optional(),
       }),
     )
+    .output(EmailDraftSchema)
     .mutation(async ({ input }) => {
       return await generateEmailDraft(input);
     }),

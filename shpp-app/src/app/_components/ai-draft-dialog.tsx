@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { api } from "@/trpc/react";
+import type { EmailDraft } from "@/lib/ai/schemas";
+import type { GmailMessage } from "@/trpc/shared/gmail";
 import {
   Dialog,
   DialogContent,
@@ -17,18 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import { formatDraft } from "@/lib/utils";
 interface AIDraftDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   subject: string;
-  onAccept: (content: string) => void;
+  threadMessages?: GmailMessage[];
+  onAccept: (draft: EmailDraft) => void;
 }
 
 export function AIDraftDialog({
   open,
   onOpenChange,
   subject,
+  threadMessages,
   onAccept,
 }: AIDraftDialogProps) {
   const [outline, setOutline] = useState("");
@@ -36,7 +40,7 @@ export function AIDraftDialog({
     "professional",
   );
   const [modifications, setModifications] = useState("");
-  const [currentDraft, setCurrentDraft] = useState("");
+  const [currentDraft, setCurrentDraft] = useState<EmailDraft | null>(null);
 
   const { mutate: generateDraft, isPending } = api.ai.generateDraft.useMutation(
     {
@@ -73,7 +77,14 @@ export function AIDraftDialog({
               </SelectContent>
             </Select>
             <Button
-              onClick={() => generateDraft({ subject, outline, tone })}
+              onClick={() =>
+                generateDraft({
+                  subject,
+                  outline,
+                  tone,
+                  threadMessages,
+                })
+              }
               disabled={isPending}
             >
               {isPending ? "Generating..." : "Generate Draft"}
@@ -82,7 +93,9 @@ export function AIDraftDialog({
         ) : (
           <div className="space-y-4">
             <div className="rounded-md bg-gray-50 p-4">
-              <pre className="whitespace-pre-wrap">{currentDraft}</pre>
+              <pre className="whitespace-pre-wrap">
+                {formatDraft(currentDraft)}
+              </pre>
             </div>
             <Textarea
               placeholder="Request modifications..."
@@ -94,7 +107,8 @@ export function AIDraftDialog({
                 onClick={() =>
                   generateDraft({
                     modifications,
-                    previousDraft: currentDraft,
+                    previousDraft: formatDraft(currentDraft),
+                    threadMessages,
                   })
                 }
                 disabled={!modifications || isPending}
