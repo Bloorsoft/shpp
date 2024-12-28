@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { api } from "@/trpc/react";
-import { formatEmailDate } from "@/lib/utils";
+import { decodeHTMLEntities, formatDraft, formatEmailDate } from "@/lib/utils";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { EmailComposer } from "@/app/_components/email-composer";
+import type { EmailDraft } from "@/lib/ai/schemas";
 
 interface ThreadViewProps {
   initialThread: GmailMessage[];
@@ -74,9 +75,7 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
                   className="prose max-w-none overflow-x-auto [&_code]:whitespace-pre-wrap [&_pre]:overflow-x-auto [&_pre]:p-4"
                 />
               ) : (
-                <div className="overflow-x-auto whitespace-pre-wrap">
-                  {message.plainContent || message.snippet}
-                </div>
+                <MessageContent message={message} />
               )}
             </div>
           </div>
@@ -90,16 +89,32 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
           onSubmit={({ content }) => {
             sendReply({
               threadId: thread[0]?.threadId ?? "",
-              content,
+              content: formatDraft(content as EmailDraft),
               to: lastMessage?.from ?? "",
             });
           }}
           onDiscard={() => setShowReply(false)}
           isPending={isPending}
           isReply
-          threadMessages={thread}
+          threadMessages={thread.map((message) => ({
+            ...message,
+            plainContent: decodeHTMLEntities(
+              /* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */
+              message.plainContent || message.snippet,
+            ),
+          }))}
         />
       )}
     </div>
+  );
+}
+
+function MessageContent({ message }: { message: GmailMessage }) {
+  const decodedContent = decodeHTMLEntities(
+    /* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */
+    message.plainContent || message.snippet,
+  );
+  return (
+    <div className="overflow-x-auto whitespace-pre-wrap">{decodedContent}</div>
   );
 }

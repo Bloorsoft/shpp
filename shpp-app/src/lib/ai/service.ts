@@ -53,6 +53,18 @@ export async function generateEmailDraft(input: {
     structuredOutputs: true,
   });
 
+  const threadContext = input.threadMessages
+    ?.map(
+      (msg, i) =>
+        `Message ${i + 1}:
+From: ${msg.from}
+Content: ${msg.plainContent ?? msg.snippet}
+---`,
+    )
+    .join("\n");
+
+  console.log(threadContext);
+
   let prompt = "";
   if (input.modifications && input.previousDraft) {
     prompt = `Please modify this email draft according to the following request:
@@ -61,23 +73,24 @@ Previous draft:
 ${input.previousDraft}
 
 Requested modifications:
-${input.modifications}`;
+${input.modifications}
+
+Thread context:
+${threadContext ?? "No previous messages"}`;
   } else {
     prompt = `Write a clear and concise email${
       input.tone ? ` in a ${input.tone} tone` : ""
     }${input.subject ? ` about: ${input.subject}` : ""}.${
       input.outline ? `\n\nIncorporate these points:\n${input.outline}` : ""
     }${
-      input.threadMessages
-        ? `\n\nThis is a reply to the following thread:\n${input.threadMessages
-            .map(
-              (msg) =>
-                `From: ${msg.from}\nContent: ${msg.plainContent ?? msg.snippet}\n`,
-            )
-            .join("\n")}`
+      threadContext
+        ? `\n\nThis is a reply to the following thread:\n${threadContext}.
+        Make sure to respond based on the thread context. Prioritize the most recent message. Write the email as if you are the sender (keep the tone consistent and match the sender's style).`
         : ""
     }`;
   }
+
+  console.log(prompt);
 
   const { object } = await generateObject({
     model,

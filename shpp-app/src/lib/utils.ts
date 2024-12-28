@@ -39,3 +39,14 @@ export function formatDraft(draft: EmailDraft) {
     draft.signature ? `\n${draft.signature}` : "",
   ].join("\n");
 }
+
+export function decodeHTMLEntities(text: string) {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x2F;/g, "/")
+    .replace(/&nbsp;/g, " ");
+}
