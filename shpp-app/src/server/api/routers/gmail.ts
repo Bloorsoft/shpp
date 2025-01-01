@@ -233,30 +233,36 @@ export const gmailRouter = createTRPCRouter({
           session.refreshToken,
         ).client;
 
-        const res = await gmail.users.messages.list({
+        const res = await gmail.users.threads.list({
           userId: "me",
           maxResults,
           q: query,
         });
 
-        const messages = res.data.messages ?? [];
+        const threads = res.data.threads ?? [];
 
-        const messagesWithDetails = await Promise.all(
-          messages.map(async (message) => {
-            if (!message.id) return null;
+        const threadsWithDetails = await Promise.all(
+          threads.map(async (thread) => {
+            if (!thread.id) return null;
 
-            const details = await gmail.users.messages.get({
+            const threadDetails = await gmail.users.threads.get({
               userId: "me",
-              id: message.id,
+              id: thread.id,
               format: "metadata",
               metadataHeaders: ["Subject", "From", "Date"],
             });
 
-            return formatMessage(details.data);
+            const latestMessage = threadDetails.data.messages?.[0];
+            if (!latestMessage) return null;
+
+            return formatMessage({
+              ...latestMessage,
+              threadId: thread.id,
+            });
           }),
         );
 
-        return messagesWithDetails.filter(
+        return threadsWithDetails.filter(
           (msg): msg is NonNullable<typeof msg> => msg !== null,
         );
       } catch (err) {
