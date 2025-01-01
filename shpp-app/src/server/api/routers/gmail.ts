@@ -6,10 +6,11 @@ import {
   getMessageContent,
   GmailClient,
 } from "@/server/helpers/gmail";
-
+import type { GmailMessage } from "@/trpc/shared/gmail";
 export const gmailRouter = createTRPCRouter({
   listMessages: protectedProcedure
     .input(z.object({ labelId: z.string().default("INBOX") }))
+    .output(z.array(z.custom<GmailMessage>()))
     .query(async ({ ctx, input }) => {
       const { session } = ctx;
       const { labelId } = input;
@@ -216,6 +217,7 @@ export const gmailRouter = createTRPCRouter({
         maxResults: z.number().default(20),
       }),
     )
+    .output(z.array(z.custom<GmailMessage>()))
     .query(async ({ ctx, input }) => {
       const { session } = ctx;
       const { query, maxResults } = input;
