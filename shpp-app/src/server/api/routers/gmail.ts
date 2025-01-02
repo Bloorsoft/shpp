@@ -26,9 +26,11 @@ export const gmailRouter = createTRPCRouter({
         const gmail = GmailClient.getInstance(
           session.accessToken,
           session.refreshToken,
-        ).client;
+        );
 
-        const res = await gmail.users.threads.list({
+        await gmail.refreshTokenIfNeeded();
+        
+        const res = await gmail.client.users.threads.list({
           userId: "me",
           maxResults: 20,
           labelIds: [labelId],
@@ -40,7 +42,7 @@ export const gmailRouter = createTRPCRouter({
           threads.map(async (thread) => {
             if (!thread.id) return null;
 
-            const threadDetails = await gmail.users.threads.get({
+            const threadDetails = await gmail.client.users.threads.get({
               userId: "me",
               id: thread.id,
               format: "metadata",
@@ -61,6 +63,9 @@ export const gmailRouter = createTRPCRouter({
           (msg): msg is NonNullable<typeof msg> => msg !== null,
         );
       } catch (err) {
+        if (err instanceof TRPCError) {
+          throw err;
+        }
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: err instanceof Error ? err.message : "Unknown error",

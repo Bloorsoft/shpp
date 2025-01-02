@@ -48,6 +48,11 @@ export async function generateEmailDraft(input: {
   modifications?: string;
   previousDraft?: string;
   threadMessages?: GmailMessage[];
+  userContext?: {
+    name: string;
+    email: string;
+    additionalInfo?: string;
+  };
 }): Promise<EmailDraft> {
   const model = openai("gpt-4o", {
     structuredOutputs: true,
@@ -64,16 +69,16 @@ Content: ${msg.plainContent ?? msg.snippet}
     )
     .join("\n");
 
-  const userContext = `
-    The current user is Parsa Tajik. He is a software engineer at Affirm and also runs a small software development studio called Bloorsoft.
-    Parsa is currently 24 years old and lives in San Francisco, CA.
-    His email address is parsa1379.tajik@gmail.com.
-  `;
+  const userRelatedContext = `
+    The current user is ${input.userContext?.name}. 
+    Their email address is ${input.userContext?.email}.
+    Other information provided by the user: ${input.userContext?.additionalInfo ?? ""}
+  `.trim();
 
   const systemPrompt = `
     You are an expert AI that composes or refines emails on behalf of the user. 
 
-    ${userContext}
+    ${userRelatedContext}
 
     The user may provide a subject, tone, outline, or modifications to an existing draft. 
     You may also see the email thread context and should reply appropriately.

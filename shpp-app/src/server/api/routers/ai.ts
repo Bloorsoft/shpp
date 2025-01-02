@@ -26,6 +26,13 @@ export const aiRouter = createTRPCRouter({
         modifications: z.string().optional(),
         previousDraft: z.string().optional(),
         threadMessages: z.array(z.custom<GmailMessage>()).optional(),
+        userContext: z
+          .object({
+            name: z.string(),
+            email: z.string(),
+            additionalInfo: z.string().optional(),
+          })
+          .optional(),
       }),
     )
     .output(EmailDraftSchema)

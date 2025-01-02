@@ -19,7 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
+import Link from "next/link";
 export function Sidebar({
   currentLabel,
   currEmail,
@@ -75,7 +75,9 @@ export function Sidebar({
       <DrawerContent className="h-full max-w-sm rounded-none">
         <DrawerHeader>
           <DrawerTitle className="flex items-center justify-between">
-            <p>{currEmail}</p>
+            <Link href="/profile">
+              <p>{currEmail}</p>
+            </Link>
             <LoginButton />
           </DrawerTitle>
         </DrawerHeader>

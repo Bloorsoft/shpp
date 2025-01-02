@@ -1,12 +1,16 @@
 import { google, type gmail_v1 } from "googleapis";
+import { TRPCError } from "@trpc/server";
 
 export class GmailClient {
   private static instances = new Map<string, GmailClient>();
   private gmail: gmail_v1.Gmail;
   private lastUsed: number;
+  private instanceKey: string;
   private static readonly TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
   private constructor(accessToken: string, refreshToken: string) {
+    this.instanceKey = `${accessToken}:${refreshToken}`;
+
     const auth = new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,
@@ -45,6 +49,21 @@ export class GmailClient {
 
   public get client() {
     return this.gmail;
+  }
+
+  public async refreshTokenIfNeeded() {
+    try {
+      await this.gmail.users.labels.list({ userId: "me" });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes("invalid_grant")) {
+        GmailClient.instances.delete(this.instanceKey);
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Session expired. Please sign in again.",
+        });
+      }
+      throw error;
+    }
   }
 }
 

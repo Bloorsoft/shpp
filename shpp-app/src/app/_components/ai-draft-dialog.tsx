@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDraft } from "@/lib/utils";
+import { useUserContext } from "@/contexts/use-user-context";
 interface AIDraftDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,7 +42,7 @@ export function AIDraftDialog({
   );
   const [modifications, setModifications] = useState("");
   const [currentDraft, setCurrentDraft] = useState<EmailDraft | null>(null);
-
+  const { userContext } = useUserContext();
   const { mutate: generateDraft, isPending } = api.ai.generateDraft.useMutation(
     {
       onSuccess: (draft) => {
@@ -83,6 +84,7 @@ export function AIDraftDialog({
                   outline,
                   tone,
                   threadMessages,
+                  userContext,
                 })
               }
               disabled={isPending}
@@ -109,6 +111,7 @@ export function AIDraftDialog({
                     modifications,
                     previousDraft: formatDraft(currentDraft),
                     threadMessages,
+                    userContext,
                   })
                 }
                 disabled={!modifications || isPending}
