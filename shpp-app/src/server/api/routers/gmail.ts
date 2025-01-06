@@ -390,4 +390,42 @@ export const gmailRouter = createTRPCRouter({
         });
       }
     }),
+  getAttachment: protectedProcedure
+    .input(
+      z.object({
+        messageId: z.string(),
+        attachmentId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { session } = ctx;
+      const { messageId, attachmentId } = input;
+
+      if (!session?.accessToken || !session?.refreshToken) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Missing authentication tokens",
+        });
+      }
+
+      try {
+        const gmail = GmailClient.getInstance(
+          session.accessToken,
+          session.refreshToken,
+        ).client;
+
+        const attachment = await gmail.users.messages.attachments.get({
+          userId: "me",
+          messageId,
+          id: attachmentId,
+        });
+
+        return attachment.data;
+      } catch (err) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    }),
 });

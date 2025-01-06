@@ -11,6 +11,12 @@ export interface GmailMessage {
   plainContent?: string;
   participants?: string[];
   myEmail?: string | null;
+  attachments?: Array<{
+    id: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+  }>;
 }
 
 export interface ThreadParticipant {

@@ -112,6 +112,12 @@ export function getMessageContent(message: gmail_v1.Schema$Message) {
 
   let htmlContent = "";
   let plainContent = "";
+  const attachments: Array<{
+    id: string;
+    filename: string;
+    mimeType: string;
+    size: number;
+  }> = [];
 
   if (message.payload) {
     const parts = message.payload.parts ?? [message.payload];
@@ -120,6 +126,14 @@ export function getMessageContent(message: gmail_v1.Schema$Message) {
         htmlContent = decodeMessagePart(part);
       } else if (part.mimeType === "text/plain") {
         plainContent = decodeMessagePart(part);
+      } else if (part.filename && part.body) {
+        // This is an attachment
+        attachments.push({
+          id: part.body.attachmentId ?? "",
+          filename: part.filename,
+          mimeType: part.mimeType ?? "application/octet-stream",
+          size: part.body.size ?? 0,
+        });
       }
     });
   }
@@ -130,6 +144,7 @@ export function getMessageContent(message: gmail_v1.Schema$Message) {
     snippet: message.snippet ?? "",
     htmlContent,
     plainContent,
+    attachments,
     ...headers,
   };
 }
