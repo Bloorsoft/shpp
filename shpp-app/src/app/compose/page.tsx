@@ -22,11 +22,12 @@ export default function ComposePage() {
 
   return (
     <EmailComposer
-      onSubmit={({ to, subject, content }) =>
+      onSubmit={({ to, subject, content, attachments }) =>
         sendEmail({
           to,
           subject,
           content: formatDraft(content as EmailDraft),
+          attachments,
         })
       }
       onDiscard={() => router.push("/")}

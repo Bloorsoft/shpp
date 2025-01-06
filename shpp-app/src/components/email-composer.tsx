@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Trash2 } from "lucide-react";
+import { Trash2, Paperclip, X } from "lucide-react";
 import { AIDraftDialog } from "@/components/ai-draft-dialog";
 import { cn } from "@/lib/utils";
 import type { GmailMessage } from "@/trpc/shared/gmail";
@@ -26,6 +26,11 @@ interface EmailComposerProps {
     to: string;
     subject: string;
     content: EmailDraft | string;
+    attachments: Array<{
+      filename: string;
+      content: string;
+      mimeType: string;
+    }>;
   }) => void;
   onDiscard: () => void;
   isPending?: boolean;
@@ -48,6 +53,43 @@ export function EmailComposer({
   const [content, setContent] = useState(initialContent);
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
+  const [attachments, setAttachments] = useState<
+    Array<{
+      filename: string;
+      content: string;
+      mimeType: string;
+    }>
+  >([]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files?.length) return;
+
+    const newAttachments = await Promise.all(
+      Array.from(files).map(async (file) => {
+        const content = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = (reader.result as string).split(",")[1] ?? "";
+            resolve(base64);
+          };
+          reader.readAsDataURL(file);
+        });
+
+        return {
+          filename: file.name,
+          content,
+          mimeType: file.type || "application/octet-stream",
+        };
+      }),
+    );
+
+    setAttachments((prev) => [...prev, ...newAttachments]);
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -57,9 +99,10 @@ export function EmailComposer({
         to: toValue,
         subject: subjectValue,
         content: content.trim(),
+        attachments,
       });
     },
-    [onSubmit, toValue, subjectValue, content],
+    [onSubmit, toValue, subjectValue, content, attachments],
   );
 
   const handleAiDialogOpen = useCallback(
@@ -206,7 +249,7 @@ export function EmailComposer({
                   </TooltipContent>
                 </Tooltip>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center gap-2">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -226,6 +269,26 @@ export function EmailComposer({
                     </KBD>
                     <KBD>j</KBD>
                   </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="relative">
+                      <Input
+                        type="file"
+                        className="absolute inset-0 cursor-pointer opacity-0"
+                        onChange={handleFileChange}
+                        multiple
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="px-2 text-xs"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Attach files</TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -251,6 +314,31 @@ export function EmailComposer({
               </div>
             </div>
           </TooltipProvider>
+
+          {attachments.length > 0 && (
+            <div className="mt-4 space-y-2">
+              <div className="text-sm font-medium text-gray-500">
+                Attachments:
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {attachments.map((file, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 rounded-md border bg-gray-50 px-3 py-2 text-sm"
+                  >
+                    <span>{file.filename}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </form>
       </div>
       <AIDraftDialog

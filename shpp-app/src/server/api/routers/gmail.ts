@@ -8,6 +8,21 @@ import {
 } from "@/server/helpers/gmail";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 
+const emailInput = z.object({
+  to: z.string(),
+  subject: z.string(),
+  content: z.string(),
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string(),
+        content: z.string(), // base64 encoded file content
+        mimeType: z.string(),
+      }),
+    )
+    .optional(),
+});
+
 export const gmailRouter = createTRPCRouter({
   listMessages: protectedProcedure
     .input(z.object({ labelId: z.string().default("INBOX") }))
@@ -168,16 +183,10 @@ export const gmailRouter = createTRPCRouter({
     }
   }),
   sendEmail: protectedProcedure
-    .input(
-      z.object({
-        to: z.string(),
-        subject: z.string(),
-        content: z.string(),
-      }),
-    )
+    .input(emailInput)
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
-      const { to, subject, content } = input;
+      const { to, subject, content, attachments } = input;
 
       if (!session?.accessToken || !session?.refreshToken) {
         throw new TRPCError({
@@ -192,17 +201,38 @@ export const gmailRouter = createTRPCRouter({
           session.refreshToken,
         ).client;
 
+        const boundary = "boundary" + Date.now().toString();
         const htmlContent = content.replace(/\n/g, "<br>");
 
-        const message = [
+        const messageParts = [
           `To: ${to}`,
           `Subject: ${subject}`,
-          "Content-Type: text/html; charset=utf-8",
+          'Content-Type: multipart/mixed; boundary="' + boundary + '"',
           "MIME-Version: 1.0",
           "",
+          `--${boundary}`,
+          "Content-Type: text/html; charset=utf-8",
+          "",
           htmlContent,
-        ].join("\r\n");
+        ];
 
+        // Add attachments if any
+        if (attachments?.length) {
+          attachments.forEach((attachment) => {
+            messageParts.push(
+              `--${boundary}`,
+              `Content-Type: ${attachment.mimeType}`,
+              `Content-Transfer-Encoding: base64`,
+              `Content-Disposition: attachment; filename="${attachment.filename}"`,
+              "",
+              attachment.content,
+            );
+          });
+        }
+
+        messageParts.push(`--${boundary}--`);
+
+        const message = messageParts.join("\r\n");
         const encodedMessage = Buffer.from(message)
           .toString("base64")
           .replace(/\+/g, "-")
@@ -321,17 +351,10 @@ export const gmailRouter = createTRPCRouter({
       }
     }),
   sendReply: protectedProcedure
-    .input(
-      z.object({
-        threadId: z.string(),
-        content: z.string(),
-        to: z.string(),
-        subject: z.string(),
-      }),
-    )
+    .input(emailInput.extend({ threadId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
-      const { threadId, content, to, subject } = input;
+      const { threadId, to, subject, content, attachments } = input;
 
       if (!session?.accessToken || !session?.refreshToken) {
         throw new TRPCError({
@@ -355,19 +378,39 @@ export const gmailRouter = createTRPCRouter({
           thread.data.messages?.[thread.data.messages.length - 1];
         if (!lastMessage) throw new Error("No messages in thread");
 
+        const boundary = "boundary" + Date.now().toString();
         const htmlContent = content.replace(/\n/g, "<br>");
 
-        const message = [
+        const messageParts = [
           `To: ${to}`,
           `Subject: ${subject}`,
           `In-Reply-To: ${lastMessage.id}`,
           `References: ${lastMessage.threadId}`,
-          "Content-Type: text/html; charset=utf-8",
+          'Content-Type: multipart/mixed; boundary="' + boundary + '"',
           "MIME-Version: 1.0",
           "",
+          `--${boundary}`,
+          "Content-Type: text/html; charset=utf-8",
+          "",
           htmlContent,
-        ].join("\r\n");
+        ];
 
+        if (attachments?.length) {
+          attachments.forEach((attachment) => {
+            messageParts.push(
+              `--${boundary}`,
+              `Content-Type: ${attachment.mimeType}`,
+              `Content-Transfer-Encoding: base64`,
+              `Content-Disposition: attachment; filename="${attachment.filename}"`,
+              "",
+              attachment.content,
+            );
+          });
+        }
+
+        messageParts.push(`--${boundary}--`);
+
+        const message = messageParts.join("\r\n");
         const encodedMessage = Buffer.from(message)
           .toString("base64")
           .replace(/\+/g, "-")

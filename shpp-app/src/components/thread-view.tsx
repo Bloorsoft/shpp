@@ -139,13 +139,14 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
         <EmailComposer
           to={replyTo ?? ""}
           subject={`Re: ${thread[0]?.subject}`}
-          onSubmit={({ content }) => {
+          onSubmit={({ content, attachments }) => {
             if (!replyTo) return;
             sendReply({
               threadId: thread[0]?.threadId ?? "",
               content: formatDraft(content as EmailDraft),
               to: replyTo,
               subject: `Re: ${thread[0]?.subject}`,
+              attachments,
             });
           }}
           onDiscard={() => setShowReply(false)}
