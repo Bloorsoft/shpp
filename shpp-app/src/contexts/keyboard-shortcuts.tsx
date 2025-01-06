@@ -40,19 +40,18 @@ export function KeyboardShortcutsProvider({
         document.activeElement?.tagName === "INPUT" ||
         document.activeElement?.tagName === "TEXTAREA";
 
-      if (!shortcut.options?.ignoreInputs && isInInput) {
-        return;
+      if (
+        (shortcut.options?.ignoreInputs || !isInInput) &&
+        (!shortcut.options?.requireModifier || e.metaKey || e.ctrlKey)
+      ) {
+        e.preventDefault();
+        shortcut.handler(e);
       }
-
-      if (shortcut.options?.requireModifier && !(e.metaKey || e.ctrlKey)) {
-        return;
-      }
-
-      e.preventDefault();
-      shortcut.handler(e);
     };
 
-    shortcuts.set("c", { handler: () => router.push("/compose") });
+    shortcuts.set("c", {
+      handler: () => router.push("/compose"),
+    });
     shortcuts.set("/", { handler: () => router.push("/search") });
 
     window.addEventListener("keydown", handleKeyPress);

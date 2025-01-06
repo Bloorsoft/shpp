@@ -120,7 +120,11 @@ export function AIDraftDialog({
               >
                 {isPending ? "Modifying..." : "Modify Draft"}
               </Button>
-              <Button onClick={() => onAccept(currentDraft)}>
+              <Button
+                onClick={() => {
+                  onAccept(currentDraft);
+                }}
+              >
                 Use This Draft
               </Button>
             </div>

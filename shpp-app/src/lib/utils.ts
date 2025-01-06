@@ -31,13 +31,16 @@ export function formatEmailDate(dateStr: string) {
 
 export function formatDraft(draft: EmailDraft | string) {
   if (typeof draft === "string") {
-    return draft;
+    return draft.replace(/\r\n/g, "\n");
   }
 
-  return [draft.greeting, draft.body, draft.closing, draft.signature]
-    .filter(Boolean)
-    .join("\n\n")
-    .trim();
+  const parts = [];
+  if (draft.greeting) parts.push(draft.greeting);
+  if (draft.body) parts.push(draft.body);
+  if (draft.closing) parts.push(draft.closing);
+  if (draft.signature) parts.push(draft.signature);
+
+  return parts.join("\n\n").replace(/\r\n/g, "\n").trim();
 }
 
 export function decodeHTMLEntities(text: string) {

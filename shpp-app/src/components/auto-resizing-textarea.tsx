@@ -8,20 +8,26 @@ const AutoResizingTextarea = forwardRef<
 >((props, ref) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  };
+
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const adjustHeight = () => {
-      textarea.style.height = "auto";
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    };
-
     textarea.addEventListener("input", adjustHeight);
-    adjustHeight();
-
     return () => textarea.removeEventListener("input", adjustHeight);
   }, []);
+
+  // Add effect to adjust height when value changes
+  useEffect(() => {
+    adjustHeight();
+  }, [props.value]);
 
   return <Textarea ref={textareaRef} {...props} />;
 });

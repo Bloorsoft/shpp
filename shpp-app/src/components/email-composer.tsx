@@ -78,7 +78,10 @@ export function EmailComposer({
           handleSubmit(new Event("submit") as unknown as React.FormEvent);
         }
       },
-      { ignoreInputs: true },
+      {
+        ignoreInputs: true,
+        requireModifier: true,
+      },
     );
 
     registerShortcut(
@@ -117,6 +120,10 @@ export function EmailComposer({
     onDiscard,
     handleAiDialogOpen,
   ]);
+
+  useEffect(() => {
+    setContent(initialContent);
+  }, [initialContent]);
 
   return (
     <div
