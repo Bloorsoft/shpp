@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import { api } from "@/trpc/react";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/use-debounce";
-import { EmailList } from "@/app/_components/email-list";
+import { EmailList } from "@/components/email-list";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { useRouter } from "next/navigation";
 

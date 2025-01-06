@@ -7,7 +7,7 @@ import type { GmailMessage } from "@/trpc/shared/gmail";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { EmailComposer } from "@/app/_components/email-composer";
+import { EmailComposer } from "@/components/email-composer";
 import type { EmailDraft } from "@/lib/ai/schemas";
 
 interface ThreadViewProps {

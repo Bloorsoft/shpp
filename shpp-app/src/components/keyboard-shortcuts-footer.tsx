@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 const shortcuts = [
   { key: "E", description: "to Mark Done" },
+  { key: "D", description: "to Delete" },
   { key: "H", description: "to set a reminder" },
   { key: "C", description: "to compose" },
   { key: "/", description: "to search" },

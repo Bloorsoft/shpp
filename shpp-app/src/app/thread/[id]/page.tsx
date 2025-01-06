@@ -1,7 +1,7 @@
 import { auth } from "@/server/auth";
 import { api } from "@/trpc/server";
 import { notFound } from "next/navigation";
-import { ThreadView } from "@/app/_components/thread-view";
+import { ThreadView } from "@/components/thread-view";
 
 export default async function ThreadPage({
   params,

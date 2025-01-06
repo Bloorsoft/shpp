@@ -11,7 +11,7 @@ import {
 import { Menu } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { LoginButton } from "@/app/_components/login-button";
+import { LoginButton } from "@/components/login-button";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import {
   Tooltip,

@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { api } from "@/trpc/react";
-import { EmailComposer } from "@/app/_components/email-composer";
+import { EmailComposer } from "@/components/email-composer";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { useEffect } from "react";
 import type { EmailDraft } from "@/lib/ai/schemas";

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoResizingTextarea } from "@/components/auto-resizing-textarea";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import {
   Tooltip,
@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Trash2 } from "lucide-react";
-import { AIDraftDialog } from "@/app/_components/ai-draft-dialog";
+import { AIDraftDialog } from "@/components/ai-draft-dialog";
 import { cn } from "@/lib/utils";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { type EmailDraft } from "@/lib/ai/schemas";
@@ -160,13 +160,13 @@ export function EmailComposer({
             </>
           )}
 
-          <Textarea
+          <AutoResizingTextarea
             placeholder={
               isReply ? "Write your reply..." : "Write your message..."
             }
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="min-h-[200px] border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+            className="max-h-[70vh] min-h-[200px] border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
             required
           />
           <TooltipProvider>

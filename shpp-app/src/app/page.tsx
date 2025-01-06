@@ -1,9 +1,9 @@
 import { auth } from "@/server/auth";
 import { api } from "@/trpc/server";
-import { LoginButton } from "@/app/_components/login-button";
-import { EmailList } from "@/app/_components/email-list";
-import { Sidebar } from "@/app/_components/sidebar";
-import { KeyboardShortcutsFooter } from "@/app/_components/keyboard-shortcuts-footer";
+import { LoginButton } from "@/components/login-button";
+import { EmailList } from "@/components/email-list";
+import { Sidebar } from "@/components/sidebar";
+import { KeyboardShortcutsFooter } from "@/components/keyboard-shortcuts-footer";
 
 export default async function Home({
   searchParams,
