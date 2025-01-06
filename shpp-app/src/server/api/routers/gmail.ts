@@ -7,6 +7,7 @@ import {
   GmailClient,
 } from "@/server/helpers/gmail";
 import type { GmailMessage } from "@/trpc/shared/gmail";
+
 export const gmailRouter = createTRPCRouter({
   listMessages: protectedProcedure
     .input(z.object({ labelId: z.string().default("INBOX") }))
@@ -29,7 +30,7 @@ export const gmailRouter = createTRPCRouter({
         );
 
         await gmail.refreshTokenIfNeeded();
-        
+
         const res = await gmail.client.users.threads.list({
           userId: "me",
           maxResults: 20,
@@ -97,7 +98,45 @@ export const gmailRouter = createTRPCRouter({
           format: "full",
         });
 
-        return (thread.data.messages ?? []).map(getMessageContent);
+        const messages = thread.data.messages ?? [];
+        const profile = await gmail.users.getProfile({ userId: "me" });
+        const myEmail = profile.data.emailAddress;
+
+        const participants = new Set<string>();
+        messages.forEach((message) => {
+          const headers = message.payload?.headers ?? [];
+          const fromHeader = headers.find((h) => h.name === "From")?.value;
+          const toHeader = headers.find((h) => h.name === "To")?.value;
+
+          const emailRegex = /<(.+?)>|([^,\s]+@[^,\s]+)/g;
+          let match;
+
+          if (fromHeader) {
+            while ((match = emailRegex.exec(fromHeader)) !== null) {
+              const email = match[1] ?? match[2];
+              if (email && email !== myEmail) {
+                participants.add(email);
+              }
+            }
+          }
+
+          if (toHeader) {
+            while ((match = emailRegex.exec(toHeader)) !== null) {
+              const email = match[1] ?? match[2];
+              if (email && email !== myEmail) {
+                participants.add(email);
+              }
+            }
+          }
+        });
+
+        const messagesWithParticipants = messages.map((msg) => ({
+          ...getMessageContent(msg),
+          participants: Array.from(participants),
+          myEmail,
+        }));
+
+        return messagesWithParticipants;
       } catch (err) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -153,13 +192,15 @@ export const gmailRouter = createTRPCRouter({
           session.refreshToken,
         ).client;
 
+        const htmlContent = content.replace(/\n/g, "<br>");
+
         const message = [
           `To: ${to}`,
           `Subject: ${subject}`,
           "Content-Type: text/html; charset=utf-8",
           "MIME-Version: 1.0",
           "",
-          content,
+          htmlContent,
         ].join("\r\n");
 
         const encodedMessage = Buffer.from(message)
@@ -285,11 +326,12 @@ export const gmailRouter = createTRPCRouter({
         threadId: z.string(),
         content: z.string(),
         to: z.string(),
+        subject: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       const { session } = ctx;
-      const { threadId, content, to } = input;
+      const { threadId, content, to, subject } = input;
 
       if (!session?.accessToken || !session?.refreshToken) {
         throw new TRPCError({
@@ -313,14 +355,17 @@ export const gmailRouter = createTRPCRouter({
           thread.data.messages?.[thread.data.messages.length - 1];
         if (!lastMessage) throw new Error("No messages in thread");
 
+        const htmlContent = content.replace(/\n/g, "<br>");
+
         const message = [
           `To: ${to}`,
+          `Subject: ${subject}`,
           `In-Reply-To: ${lastMessage.id}`,
           `References: ${lastMessage.threadId}`,
           "Content-Type: text/html; charset=utf-8",
           "MIME-Version: 1.0",
           "",
-          content,
+          htmlContent,
         ].join("\r\n");
 
         const encodedMessage = Buffer.from(message)

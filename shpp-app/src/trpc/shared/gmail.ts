@@ -9,6 +9,13 @@ export interface GmailMessage {
   snippet: string;
   htmlContent?: string;
   plainContent?: string;
+  participants?: string[];
+  myEmail?: string | null;
+}
+
+export interface ThreadParticipant {
+  email: string;
+  isMe: boolean;
 }
 
 export type GmailMessageList = GmailMessage[];

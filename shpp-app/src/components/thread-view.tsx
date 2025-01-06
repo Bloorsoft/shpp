@@ -53,6 +53,18 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
 
   const lastMessage = thread[thread.length - 1];
 
+  const getReplyRecipient = () => {
+    if (!lastMessage?.participants?.length || !lastMessage.myEmail) return null;
+
+    if (lastMessage.from === lastMessage.myEmail) {
+      return lastMessage.participants[0];
+    }
+
+    return lastMessage.from;
+  };
+
+  const replyTo = getReplyRecipient();
+
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h1 className="text-2xl font-bold">{thread[0]?.subject}</h1>
@@ -84,13 +96,15 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
 
       {showReply && (
         <EmailComposer
-          to={lastMessage?.from}
+          to={replyTo ?? ""}
           subject={`Re: ${thread[0]?.subject}`}
           onSubmit={({ content }) => {
+            if (!replyTo) return;
             sendReply({
               threadId: thread[0]?.threadId ?? "",
               content: formatDraft(content as EmailDraft),
-              to: lastMessage?.from ?? "",
+              to: replyTo,
+              subject: `Re: ${thread[0]?.subject}`,
             });
           }}
           onDiscard={() => setShowReply(false)}
@@ -99,7 +113,7 @@ export function ThreadView({ initialThread }: ThreadViewProps) {
           threadMessages={thread.map((message) => ({
             ...message,
             plainContent: decodeHTMLEntities(
-              /* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing */
+              // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
               message.plainContent || message.snippet,
             ),
           }))}

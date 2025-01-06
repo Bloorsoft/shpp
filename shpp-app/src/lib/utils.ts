@@ -29,15 +29,15 @@ export function formatEmailDate(dateStr: string) {
   });
 }
 
-export function formatDraft(draft: EmailDraft) {
-  return [
-    draft.greeting,
-    "",
-    draft.body,
-    "",
-    draft.closing,
-    draft.signature ? `\n${draft.signature}` : "",
-  ].join("\n");
+export function formatDraft(draft: EmailDraft | string) {
+  if (typeof draft === "string") {
+    return draft;
+  }
+
+  return [draft.greeting, draft.body, draft.closing, draft.signature]
+    .filter(Boolean)
+    .join("\n\n")
+    .trim();
 }
 
 export function decodeHTMLEntities(text: string) {

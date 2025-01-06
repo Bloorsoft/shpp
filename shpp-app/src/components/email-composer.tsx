@@ -52,7 +52,12 @@ export function EmailComposer({
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
-      onSubmit({ to: toValue, subject: subjectValue, content });
+      if (!toValue || !content.trim()) return;
+      onSubmit({
+        to: toValue,
+        subject: subjectValue,
+        content: content.trim(),
+      });
     },
     [onSubmit, toValue, subjectValue, content],
   );
@@ -246,6 +251,7 @@ export function EmailComposer({
         onOpenChange={setAiDialogOpen}
         subject={subjectValue}
         threadMessages={threadMessages}
+        existingContent={content}
         onAccept={(draft: EmailDraft) => {
           setContent(formatDraft(draft));
           setSubjectValue(draft.subject);

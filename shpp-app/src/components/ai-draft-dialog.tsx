@@ -27,6 +27,7 @@ interface AIDraftDialogProps {
   subject: string;
   threadMessages?: GmailMessage[];
   onAccept: (draft: EmailDraft) => void;
+  existingContent?: string;
 }
 
 export function AIDraftDialog({
@@ -35,8 +36,9 @@ export function AIDraftDialog({
   subject,
   threadMessages,
   onAccept,
+  existingContent = "",
 }: AIDraftDialogProps) {
-  const [outline, setOutline] = useState("");
+  const [outline, setOutline] = useState(existingContent);
   const [tone, setTone] = useState<"professional" | "casual" | "friendly">(
     "professional",
   );
