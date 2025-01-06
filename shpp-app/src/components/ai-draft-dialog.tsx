@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/trpc/react";
 import type { EmailDraft } from "@/lib/ai/schemas";
 import type { GmailMessage } from "@/trpc/shared/gmail";
@@ -43,8 +43,37 @@ export function AIDraftDialog({
     "professional",
   );
   const [modifications, setModifications] = useState("");
-  const [currentDraft, setCurrentDraft] = useState<EmailDraft | null>(null);
+  const [currentDraft, setCurrentDraft] = useState<EmailDraft | null>(
+    existingContent
+      ? {
+          subject,
+          body: existingContent,
+          greeting: "",
+          closing: "",
+          signature: "",
+        }
+      : null,
+  );
   const { userContext } = useUserContext();
+
+  useEffect(() => {
+    if (open) {
+      setOutline(existingContent);
+      setCurrentDraft(
+        existingContent
+          ? {
+              subject,
+              body: existingContent,
+              greeting: "",
+              closing: "",
+              signature: "",
+            }
+          : null,
+      );
+      setModifications("");
+    }
+  }, [open, existingContent, subject]);
+
   const { mutate: generateDraft, isPending } = api.ai.generateDraft.useMutation(
     {
       onSuccess: (draft) => {
