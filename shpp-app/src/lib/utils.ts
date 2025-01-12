@@ -55,9 +55,23 @@ export function decodeHTMLEntities(text: string) {
 }
 
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+}
+
+export function extractNameFromEmail(emailString: string): string {
+  const nameEmailRegex = /(.*?)\s*<.*>/;
+  const match = nameEmailRegex.exec(emailString);
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  if (emailString.includes("@")) {
+    return emailString.split("@")[0] ?? emailString;
+  }
+
+  return emailString;
 }

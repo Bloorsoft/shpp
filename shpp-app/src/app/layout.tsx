@@ -8,6 +8,8 @@ import { SessionProvider } from "next-auth/react";
 import { KeyboardShortcutsProvider } from "@/contexts/keyboard-shortcuts";
 import { Toaster } from "@/components/ui/sonner";
 
+import RightPanel from "@/components/right-panel";
+
 export const metadata: Metadata = {
   title: "Superhuman++",
   description: "Superhuman++",
@@ -22,7 +24,12 @@ export default function RootLayout({
       <body>
         <SessionProvider>
           <TRPCReactProvider>
-            <KeyboardShortcutsProvider>{children}</KeyboardShortcutsProvider>
+            <KeyboardShortcutsProvider>
+              <div className="flex h-screen overflow-hidden">
+                <div className="flex-1 overflow-y-auto">{children}</div>
+                <RightPanel />
+              </div>
+            </KeyboardShortcutsProvider>
             <Toaster />
           </TRPCReactProvider>
         </SessionProvider>

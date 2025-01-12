@@ -4,18 +4,16 @@ import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
-import { formatEmailDate } from "@/lib/utils";
+import { formatEmailDate, extractNameFromEmail } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { EmailImportance } from "@/lib/ai/schemas";
 
 export function EmailList({
   initialMessages,
   currentMessages,
-  hideLabel = false,
 }: {
   initialMessages: GmailMessage[];
   currentMessages?: GmailMessage[];
-  hideLabel?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -28,7 +26,7 @@ export function EmailList({
     { labelId: currentLabel },
     {
       initialData: initialMessages,
-    //   refetchInterval: 30000,
+      //   refetchInterval: 30000,
       enabled: !currentMessages,
     },
   );
@@ -106,12 +104,7 @@ export function EmailList({
   } as Record<EmailImportance["importance"], string>;
 
   return (
-    <div className="mx-auto w-full max-w-3xl">
-      {!hideLabel && (
-        <h2 className="mb-4 text-2xl capitalize">
-          {currentLabel.toLowerCase().replace("_", " ")}
-        </h2>
-      )}
+    <div className="mx-auto w-full overflow-y-auto">
       {messages.length === 0 ? (
         <p>No messages found.</p>
       ) : (
@@ -121,26 +114,31 @@ export function EmailList({
               key={msg.id}
               onClick={() => router.push(`/thread/${msg.threadId}`)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`flex cursor-pointer justify-between rounded p-4 transition-colors ${
+              className={`transition-color flex cursor-pointer flex-col rounded p-4 ${
                 index === selectedIndex
                   ? importance
                     ? importanceColors[importance.importance]
                     : "bg-blue-50 ring-2 ring-blue-200"
-                  : "bg-gray-50 hover:bg-gray-100"
+                  : "hover:bg-gray-100"
               }`}
             >
-              <div className="flex flex-col">
-                <p className="font-medium">{msg.from}</p>
-                <p className="text-sm text-gray-600">{msg.subject}</p>
-                {importance?.reason && index === selectedIndex && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    {importance.reason}
-                  </p>
-                )}
+              <div className="flex w-full items-center gap-4 text-sm">
+                <p className="w-48 shrink-0 font-medium">
+                  {extractNameFromEmail(msg.from)}
+                </p>
+                <div className="flex flex-1 gap-2 truncate">
+                  <p className="truncate text-gray-700">{msg.subject}</p>
+                  <p className="truncate text-gray-400">{msg.snippet}</p>
+                </div>
+                <span className="shrink-0 text-gray-500">
+                  {formatEmailDate(msg.date)}
+                </span>
               </div>
-              <div className="text-sm text-gray-500">
-                {formatEmailDate(msg.date)}
-              </div>
+              {importance?.reason && index === selectedIndex && (
+                <p className="mt-1 text-sm text-gray-500">
+                  {importance.reason}
+                </p>
+              )}
             </li>
           ))}
         </ul>

@@ -60,7 +60,6 @@ export function EmailComposer({
       mimeType: string;
     }>
   >([]);
-
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files?.length) return;

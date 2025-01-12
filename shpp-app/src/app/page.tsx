@@ -28,12 +28,12 @@ export default async function Home({
 
     return (
       <>
-        <main className="relative flex min-h-screen flex-col items-center p-4">
+        <main className="relative flex flex-col items-center p-4 overflow-y-auto">
           <Sidebar
             currentLabel={params.label ?? "INBOX"}
             currEmail={session.user.email!}
           />
-          <div className="w-full max-w-4xl py-8">
+          <div className="w-full py-8">
             <EmailList initialMessages={messages} />
           </div>
         </main>
