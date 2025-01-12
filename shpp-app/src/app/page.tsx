@@ -2,8 +2,8 @@ import { auth } from "@/server/auth";
 import { api } from "@/trpc/server";
 import { LoginButton } from "@/components/login-button";
 import { EmailList } from "@/components/email-list";
-import { Sidebar } from "@/components/sidebar";
 import { KeyboardShortcutsFooter } from "@/components/keyboard-shortcuts-footer";
+import { LabelsHeader } from "@/components/labels-header";
 
 export default async function Home({
   searchParams,
@@ -28,12 +28,12 @@ export default async function Home({
 
     return (
       <>
-        <main className="relative flex flex-col items-center p-4 overflow-y-auto">
-          <Sidebar
-            currentLabel={params.label ?? "INBOX"}
-            currEmail={session.user.email!}
-          />
-          <div className="w-full py-8">
+        <LabelsHeader
+          currentLabel={params.label ?? "INBOX"}
+          currEmail={session.user.email!}
+        />
+        <main className="flex h-full">
+          <div className="flex-1 overflow-y-auto pb-16">
             <EmailList initialMessages={messages} />
           </div>
         </main>

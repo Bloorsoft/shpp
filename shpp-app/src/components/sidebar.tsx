@@ -121,7 +121,7 @@ function SidebarButton({
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="absolute left-4 top-4 cursor-pointer rounded-lg p-2 hover:bg-gray-100"
+            className="cursor-pointer rounded-lg hover:bg-gray-100"
             onClick={() => setIsDrawerOpen(true)}
           >
             <Menu className="h-6 w-6" />
