@@ -47,11 +47,7 @@ export default function SearchPage() {
             />
           </div>
 
-          <EmailList
-            initialMessages={[]}
-            currentMessages={messages}
-            hideLabel={true}
-          />
+          <EmailList initialMessages={[]} currentMessages={messages} />
         </div>
       </main>
     </Suspense>

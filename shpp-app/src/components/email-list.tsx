@@ -114,7 +114,7 @@ export function EmailList({
               key={msg.id}
               onClick={() => router.push(`/thread/${msg.threadId}`)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`transition-color flex cursor-pointer flex-col rounded p-4 ${
+              className={`transition-color flex cursor-pointer flex-col gap-2 rounded p-4 ${
                 index === selectedIndex
                   ? importance
                     ? importanceColors[importance.importance]
