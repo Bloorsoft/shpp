@@ -16,6 +16,8 @@ export const env = createEnv({
     NEXTAUTH_URL: z.string(),
     OPENAI_API_KEY: z.string(),
     PINECONE_API_KEY: z.string(),
+    SUPABASE_PROJECT_ID: z.string(),
+    SUPABASE_DB_PASSWORD: z.string(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -42,6 +44,8 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
     PINECONE_API_KEY: process.env.PINECONE_API_KEY,
+    SUPABASE_PROJECT_ID: process.env.SUPABASE_PROJECT_ID,
+    SUPABASE_DB_PASSWORD: process.env.SUPABASE_DB_PASSWORD,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**

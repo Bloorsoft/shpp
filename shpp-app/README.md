@@ -95,3 +95,10 @@ export const aiRouter = createTRPCRouter({
 - use structured outputs to create subject separately
 - have context on who the main user of the application is
 -- maybe ask them to give their personal website, linkedin, or any other relevant info that they have when they are initially setting up their account -> store this content in a vector db
+
+
+## Local development and migrations
+
+You need to link the project by running `supabase link --project-ref zwxvmxrpmklucseotesg`
+
+The other db related commands are written in our package.json file
