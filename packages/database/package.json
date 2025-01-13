@@ -1,0 +1,16 @@
+{
+  "name": "@shpp/database",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "types:generate": "supabase gen types typescript --project-id \"$PROJECT_REF\" > types/database.types.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3"
+  }
+}
