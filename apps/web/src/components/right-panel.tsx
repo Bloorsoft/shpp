@@ -1,4 +1,10 @@
-const RightPanel = () => {
+import { auth } from "@/server/auth";
+
+const RightPanel = async () => {
+  const session = await auth();
+
+  if (!session?.user) return null;
+
   return (
     <div className="h-screen w-full max-w-sm overflow-y-auto border-l bg-gray-100">
       <div className="flex flex-col justify-center gap-4 p-4">
