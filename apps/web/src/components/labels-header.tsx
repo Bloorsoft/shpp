@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 export function LabelsHeader({
   currentLabel,
@@ -22,6 +24,22 @@ export function LabelsHeader({
   const { data: labels } = api.gmail.listLabels.useQuery();
   const router = useRouter();
 
+  const defaultLabels = useMemo(
+    () => [
+      {
+        id: "INBOX",
+        name: "Inbox",
+        messagesTotal: undefined,
+      },
+      {
+        id: "SENT",
+        name: "Sent",
+        messagesTotal: undefined,
+      },
+    ],
+    [],
+  );
+
   const visibleLabels =
     labels
       ?.filter((label) => label.id && !label.id.startsWith("CATEGORY_"))
@@ -32,15 +50,19 @@ export function LabelsHeader({
       <div className="flex items-center gap-8">
         <Sidebar currentLabel={currentLabel} currEmail={currEmail} />
         <nav className="flex items-center gap-2">
-          {visibleLabels.map((label) => (
+          {defaultLabels.map((label) => (
             <Button
               key={label.id}
               variant="ghost"
-              className="flex items-center gap-2"
+              className={cn(
+                "flex items-center gap-2 focus:outline-none focus:ring-0",
+                currentLabel === label.id ? "font-bold" : "font-normal",
+              )}
+              onClick={() => router.push(`/?label=${label.id}`)}
             >
               {label.name}{" "}
               <span className="text-xs text-gray-400">
-                {label.messagesTotal ?? 0}
+                {label.messagesTotal ?? undefined}
               </span>
             </Button>
           ))}
@@ -49,13 +71,21 @@ export function LabelsHeader({
       <div className="flex items-center gap-2">
         <TooltipProvider>
           {[
-            { icon: Settings, label: "Settings", func: undefined },
+            {
+              icon: Settings,
+              label: "Settings",
+              func: () => router.push("/profile"),
+            },
             {
               icon: PenLine,
               label: "Compose",
               func: () => router.push("/compose"),
             },
-            { icon: Search, label: "Search", func: () => router.push("/search") },
+            {
+              icon: Search,
+              label: "Search",
+              func: () => router.push("/search"),
+            },
           ].map(({ icon: Icon, label, func }) => (
             <Tooltip key={label}>
               <TooltipTrigger asChild>

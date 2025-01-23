@@ -1,12 +1,13 @@
 "use client";
 
 import { createContext, useContext, useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 type ShortcutHandler = (e: KeyboardEvent) => void;
 type ShortcutOptions = {
   ignoreInputs?: boolean;
   requireModifier?: boolean;
+  onlyInPaths?: string[];
 };
 
 interface ShortcutsContextType {
@@ -26,6 +27,7 @@ export function KeyboardShortcutsProvider({
   children: ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const shortcuts = new Map<
     string,
     { handler: ShortcutHandler; options?: ShortcutOptions }
@@ -41,6 +43,13 @@ export function KeyboardShortcutsProvider({
         document.activeElement?.tagName === "TEXTAREA";
 
       if (
+        shortcut.options?.onlyInPaths &&
+        !shortcut.options.onlyInPaths.includes(pathname)
+      ) {
+        return;
+      }
+
+      if (
         (shortcut.options?.ignoreInputs || !isInInput) &&
         (!shortcut.options?.requireModifier || e.metaKey || e.ctrlKey)
       ) {
@@ -49,14 +58,35 @@ export function KeyboardShortcutsProvider({
       }
     };
 
+    // Register default shortcuts
     shortcuts.set("c", {
       handler: () => router.push("/compose"),
     });
     shortcuts.set("/", { handler: () => router.push("/search") });
+    shortcuts.set("Tab", {
+      // TODO: fix tab shortcut on labels header
+      handler: (e) => {
+        if (
+          document.activeElement?.tagName === "INPUT" ||
+          document.activeElement?.tagName === "TEXTAREA"
+        )
+          return;
+
+        e.preventDefault();
+        const defaultLabels = ["INBOX", "SENT"];
+        const currentLabel =
+          new URLSearchParams(window.location.search).get("label") ?? "INBOX";
+        const currentIndex = defaultLabels.indexOf(currentLabel);
+        const nextLabel =
+          defaultLabels[(currentIndex + 1) % defaultLabels.length];
+        router.push(`/?label=${nextLabel}`);
+      },
+      options: { onlyInPaths: ["/"] },
+    });
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [router]);
+  }, [router, pathname, shortcuts]);
 
   return (
     <ShortcutsContext.Provider

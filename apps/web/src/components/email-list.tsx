@@ -20,10 +20,11 @@ export function EmailList({
   const currentLabel = searchParams.get("label") ?? "INBOX";
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
-  const utils = api.useUtils();
-  const containerRef = useRef<HTMLDivElement>(null);
   const [localMessages, setLocalMessages] = useState<GmailMessage[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const utils = api.useUtils();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: fetchedMessages } = api.gmail.listMessages.useQuery(
     { labelId: currentLabel },
