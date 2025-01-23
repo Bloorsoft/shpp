@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { api } from "@/trpc/react";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
@@ -22,6 +22,8 @@ export function EmailList({
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const utils = api.useUtils();
   const containerRef = useRef<HTMLDivElement>(null);
+  const [localMessages, setLocalMessages] = useState<GmailMessage[]>([]);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { data: fetchedMessages } = api.gmail.listMessages.useQuery(
     { labelId: currentLabel },
@@ -58,6 +60,19 @@ export function EmailList({
     },
   });
 
+  const handleDelete = useCallback(
+    (messageId: string) => {
+      setDeletingId(messageId);
+
+      setTimeout(() => {
+        setLocalMessages((prev) => prev.filter((msg) => msg.id !== messageId));
+        deleteEmail({ messageId });
+        setDeletingId(null);
+      }, 300);
+    },
+    [deleteEmail],
+  );
+
   useEffect(() => {
     containerRef.current?.focus();
     if (messages.length > 0 && selectedIndex === -1) {
@@ -84,7 +99,7 @@ export function EmailList({
       if (selectedIndex >= 0 && messages[selectedIndex]) {
         const message = messages[selectedIndex];
         setSelectedIndex((prev) => (prev > 0 ? prev - 1 : 0));
-        deleteEmail({ messageId: message.id });
+        handleDelete(message.id);
       }
     });
 
@@ -110,11 +125,15 @@ export function EmailList({
     messages.length,
     selectedIndex,
     router,
-    deleteEmail,
+    handleDelete,
     registerShortcut,
     unregisterShortcut,
     messages,
   ]);
+
+  useEffect(() => {
+    setLocalMessages(messages);
+  }, [messages]);
 
   const importanceColors = {
     high: "bg-red-50 ring-red-200",
@@ -127,16 +146,20 @@ export function EmailList({
       ref={containerRef}
       className="mx-auto w-full overflow-y-auto outline-none"
     >
-      {messages.length === 0 ? (
+      {localMessages.length === 0 ? (
         <p>No messages found.</p>
       ) : (
         <ul className="space-y-2">
-          {messages.map((msg, index) => (
+          {localMessages.map((msg, index) => (
             <li
               key={msg.id}
               onClick={() => router.push(`/thread/${msg.threadId}`)}
               onMouseEnter={() => setSelectedIndex(index)}
-              className={`transition-color flex cursor-pointer flex-col gap-2 rounded p-4 ${
+              className={`flex cursor-pointer flex-col gap-2 rounded p-4 transition-all duration-300 ${
+                deletingId === msg.id
+                  ? "-translate-x-full transform opacity-0"
+                  : ""
+              } ${
                 index === selectedIndex
                   ? importance
                     ? importanceColors[importance.importance]
