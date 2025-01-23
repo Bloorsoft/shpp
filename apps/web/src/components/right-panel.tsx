@@ -1,9 +1,11 @@
-import { auth } from "@/server/auth";
+"use client";
 
-const RightPanel = async () => {
-  const session = await auth();
+import { DomainInfo } from "./domain-info";
+import { useSelectedEmail } from "@/contexts/selected-email";
 
-  if (!session?.user) return null;
+const RightPanel = () => {
+  const { selectedEmail } = useSelectedEmail();
+  const domain = selectedEmail?.from.split("@")[1]?.split(">")[0];
 
   return (
     <div className="h-screen w-full max-w-sm overflow-y-auto border-l bg-gray-100">
@@ -13,6 +15,7 @@ const RightPanel = async () => {
           This right panel will contain a variety of AI features that will make
           your life simpler.
         </p>
+        <DomainInfo domain={domain} />
       </div>
     </div>
   );

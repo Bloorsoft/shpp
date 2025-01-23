@@ -3,6 +3,9 @@ import { z } from "zod";
 import { analyzeEmailImportance, generateEmailDraft } from "@/lib/ai/service";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { EmailDraftSchema } from "@/lib/ai/schemas";
+import { DomainInfoSchema, digTool } from "@/lib/ai/tools/dig";
+import { openai } from "@ai-sdk/openai";
+import type { ToolExecutionOptions } from "ai";
 
 export const aiRouter = createTRPCRouter({
   analyzeEmailImportance: protectedProcedure
@@ -38,5 +41,20 @@ export const aiRouter = createTRPCRouter({
     .output(EmailDraftSchema)
     .mutation(async ({ input }) => {
       return await generateEmailDraft(input);
+    }),
+
+  getDomainInfo: protectedProcedure
+    .input(
+      z.object({
+        domain: z.string(),
+      }),
+    )
+    .output(DomainInfoSchema)
+    .query(async ({ input }) => {
+      const options: ToolExecutionOptions = {
+        toolCallId: `dig-${input.domain}`,
+        messages: [],
+      };
+      return await digTool.execute({ domain: input.domain }, options);
     }),
 });

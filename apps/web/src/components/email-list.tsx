@@ -7,6 +7,7 @@ import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
 import { formatEmailDate, extractNameFromEmail } from "@/lib/utils";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { EmailImportance } from "@/lib/ai/schemas";
+import { useSelectedEmail } from "@/contexts/selected-email";
 
 export function EmailList({
   initialMessages,
@@ -22,6 +23,7 @@ export function EmailList({
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const [localMessages, setLocalMessages] = useState<GmailMessage[]>([]);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { setSelectedEmail } = useSelectedEmail();
 
   const utils = api.useUtils();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -135,6 +137,12 @@ export function EmailList({
   useEffect(() => {
     setLocalMessages(messages);
   }, [messages]);
+
+  useEffect(() => {
+    if (selectedIndex >= 0 && messages[selectedIndex]) {
+      setSelectedEmail(messages[selectedIndex]);
+    }
+  }, [selectedIndex, messages, setSelectedEmail]);
 
   const importanceColors = {
     high: "bg-red-50 ring-red-200",

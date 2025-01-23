@@ -7,6 +7,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { SessionProvider } from "next-auth/react";
 import { KeyboardShortcutsProvider } from "@/contexts/keyboard-shortcuts";
 import { Toaster } from "@/components/ui/sonner";
+import { SelectedEmailProvider } from "@/contexts/selected-email";
 
 import RightPanel from "@/components/right-panel";
 
@@ -25,10 +26,12 @@ export default function RootLayout({
         <SessionProvider>
           <TRPCReactProvider>
             <KeyboardShortcutsProvider>
-              <div className="flex h-screen overflow-hidden">
-                <div className="flex-1 overflow-y-auto">{children}</div>
-                <RightPanel />
-              </div>
+              <SelectedEmailProvider>
+                <div className="flex h-screen overflow-hidden">
+                  <div className="flex-1 overflow-y-auto">{children}</div>
+                  <RightPanel />
+                </div>
+              </SelectedEmailProvider>
             </KeyboardShortcutsProvider>
             <Toaster />
           </TRPCReactProvider>
