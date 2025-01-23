@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
 
 export function LabelsHeader({
   currentLabel,
@@ -19,6 +20,7 @@ export function LabelsHeader({
   currEmail: string;
 }) {
   const { data: labels } = api.gmail.listLabels.useQuery();
+  const router = useRouter();
 
   const visibleLabels =
     labels
@@ -47,13 +49,17 @@ export function LabelsHeader({
       <div className="flex items-center gap-2">
         <TooltipProvider>
           {[
-            { icon: Settings, label: "Settings" },
-            { icon: PenLine, label: "Compose" },
-            { icon: Search, label: "Search" },
-          ].map(({ icon: Icon, label }) => (
+            { icon: Settings, label: "Settings", func: undefined },
+            {
+              icon: PenLine,
+              label: "Compose",
+              func: () => router.push("/compose"),
+            },
+            { icon: Search, label: "Search", func: () => router.push("/search") },
+          ].map(({ icon: Icon, label, func }) => (
             <Tooltip key={label}>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" onClick={func}>
                   <Icon className="h-5 w-5" />
                 </Button>
               </TooltipTrigger>

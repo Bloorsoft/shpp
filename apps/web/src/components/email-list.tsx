@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { api } from "@/trpc/react";
 import type { GmailMessage } from "@/trpc/shared/gmail";
 import { useKeyboardShortcuts } from "@/contexts/keyboard-shortcuts";
@@ -21,6 +21,7 @@ export function EmailList({
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const utils = api.useUtils();
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const { data: fetchedMessages } = api.gmail.listMessages.useQuery(
     { labelId: currentLabel },
@@ -58,6 +59,11 @@ export function EmailList({
   });
 
   useEffect(() => {
+    containerRef.current?.focus();
+    if (messages.length > 0 && selectedIndex === -1) {
+      setSelectedIndex(0);
+    }
+
     registerShortcut("ArrowDown", () => {
       setSelectedIndex((prev) =>
         prev < messages.length - 1 ? prev + 1 : prev,
@@ -82,19 +88,32 @@ export function EmailList({
       }
     });
 
+    registerShortcut("j", () => {
+      setSelectedIndex((prev) =>
+        prev < messages.length - 1 ? prev + 1 : prev,
+      );
+    });
+
+    registerShortcut("k", () => {
+      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+    });
+
     return () => {
       unregisterShortcut("ArrowDown");
       unregisterShortcut("ArrowUp");
       unregisterShortcut("Enter");
       unregisterShortcut("d");
+      unregisterShortcut("j");
+      unregisterShortcut("k");
     };
   }, [
-    registerShortcut,
-    unregisterShortcut,
-    messages,
+    messages.length,
     selectedIndex,
     router,
     deleteEmail,
+    registerShortcut,
+    unregisterShortcut,
+    messages,
   ]);
 
   const importanceColors = {
@@ -104,7 +123,10 @@ export function EmailList({
   } as Record<EmailImportance["importance"], string>;
 
   return (
-    <div className="mx-auto w-full overflow-y-auto">
+    <div
+      ref={containerRef}
+      className="mx-auto w-full overflow-y-auto outline-none"
+    >
       {messages.length === 0 ? (
         <p>No messages found.</p>
       ) : (
