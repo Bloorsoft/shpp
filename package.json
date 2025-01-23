@@ -4,7 +4,8 @@
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "types:generate": "pnpm --filter @shpp/database run types:generate"
   },
   "devDependencies": {
     "@turbo/gen": "^2.3.3",
